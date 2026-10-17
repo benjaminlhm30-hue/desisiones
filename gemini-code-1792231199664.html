@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Twitch Poll OAuth - Material You (Android 17)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0" rel="stylesheet" />
+  <style>
+    :root {
+      --md-bg: #121318;
+      --md-surface: #1E1F26;
+      --md-surface-high: #282A34;
+      --md-primary: #C3C0FF;
+      --md-on-primary: #27237A;
+      --md-primary-container: #3E3B92;
+      --md-secondary-container: #353746;
+      --md-text: #E4E1E9;
+      --md-text-muted: #92909A;
+      --md-yes: #78DC77;
+      --md-yes-bg: #1E3A20;
+      --md-no: #FFB4AB;
+      --md-no-bg: #411E1B;
+      --radius-xl: 32px;
+      --radius-lg: 22px;
+      --radius-pill: 999px;
+    }
+
+    [data-theme="emerald"] {
+      --md-bg: #0F1512;
+      --md-surface: #1B211E;
+      --md-surface-high: #252B28;
+      --md-primary: #85D6A8;
+      --md-on-primary: #003820;
+      --md-primary-container: #005231;
+      --md-secondary-container: #2E3933;
+    }
+
+    [data-theme="coral"] {
+      --md-bg: #181211;
+      --md-surface: #251E1C;
+      --md-surface-high: #302826;
+      --md-primary: #FFB4A4;
+      --md-on-primary: #561E13;
+      --md-primary-container: #733427;
+      --md-secondary-container: #413330;
+    }
+
+    [data-theme="ocean"] {
+      --md-bg: #101418;
+      --md-surface: #1C2025;
+      --md-surface-high: #262A30;
+      --md-primary: #96CCF8;
+      --md-on-primary: #00344F;
+      --md-primary-container: #004B70;
+      --md-secondary-container: #2F3740;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--md-bg);
+      color: var(--md-text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      transition: background-color 0.4s ease;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 540px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Barra superior */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--md-surface);
+      padding: 12px 20px;
+      border-radius: var(--radius-pill);
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      background: var(--md-surface-high);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #FF5449;
+      transition: background 0.3s ease;
+    }
+
+    .status-dot.connected {
+      background: #78DC77;
+      box-shadow: 0 0 10px #78DC77;
+    }
+
+    .theme-dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .theme-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .theme-btn:hover { transform: scale(1.18); }
+    .theme-btn.active { border-color: #fff; transform: scale(1.12); }
+
+    /* Tarjetas Material You */
+    .card {
+      background: var(--md-surface);
+      border-radius: var(--radius-xl);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: background 0.4s ease;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--md-primary);
+    }
+
+    .auth-body {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .auth-body.collapsed {
+      display: none;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .password-wrapper {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    .password-wrapper .md-input {
+      width: 100%;
+      padding-right: 44px;
+    }
+
+    .icon-btn {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: var(--md-text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    .md-input {
+      flex: 1;
+      background: var(--md-surface-high);
+      border: 2px solid transparent;
+      color: var(--md-text);
+      padding: 13px 16px;
+      border-radius: var(--radius-lg);
+      font-size: 0.92rem;
+      font-weight: 600;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .md-input:focus {
+      border-color: var(--md-primary);
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.92rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 20px;
+      border-radius: var(--radius-lg);
+      transition: transform 0.15s ease, filter 0.2s ease;
+    }
+
+    .btn:active { transform: scale(0.96); }
+
+    .btn-primary {
+      background: var(--md-primary);
+      color: var(--md-on-primary);
+    }
+
+    .btn-tonal {
+      background: var(--md-secondary-container);
+      color: var(--md-text);
+    }
+
+    /* Switch Material 3 */
+    .switch-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--md-surface-high);
+      padding: 10px 16px;
+      border-radius: var(--radius-lg);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .md-switch {
+      position: relative;
+      width: 48px;
+      height: 26px;
+    }
+
+    .md-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: var(--md-secondary-container);
+      border: 2px solid var(--md-text-muted);
+      border-radius: var(--radius-pill);
+      transition: 0.25s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 3px;
+      background-color: var(--md-text-muted);
+      border-radius: 50%;
+      transition: 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .md-switch input:checked + .slider {
+      background-color: var(--md-primary);
+      border-color: var(--md-primary);
+    }
+
+    .md-switch input:checked + .slider:before {
+      transform: translateX(20px);
+      background-color: var(--md-on-primary);
+    }
+
+    /* Selector de Tiempo */
+    .time-config {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chip-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .chip {
+      background: var(--md-surface-high);
+      color: var(--md-text-muted);
+      border: none;
+      padding: 8px 14px;
+      border-radius: var(--radius-pill);
+      font-weight: 700;
+      font-size: 0.84rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .chip.selected {
+      background: var(--md-primary-container);
+      color: var(--md-primary);
+    }
+
+    .custom-seconds {
+      width: 82px;
+      text-align: center;
+      padding: 8px 10px;
+      border-radius: var(--radius-pill);
+    }
+
+    /* Reloj y Encuesta */
+    .timer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .timer-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--md-primary-container);
+      color: var(--md-primary);
+      padding: 10px 20px;
+      border-radius: var(--radius-pill);
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      transition: all 0.3s ease;
+    }
+
+    .timer-pill.urgent {
+      background: #690005;
+      color: #FFB4AB;
+      animation: pulse 0.8s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.06); }
+    }
+
+    .question-display {
+      font-size: 1.4rem;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    /* Barras de Votación */
+    .vote-track {
+      position: relative;
+      height: 66px;
+      background: var(--md-surface-high);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      justify-content: space-between;
+    }
+
+    .vote-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 0%;
+      border-radius: var(--radius-lg);
+      transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 1;
+    }
+
+    .vote-fill.yes { background: var(--md-yes-bg); border-right: 4px solid var(--md-yes); }
+    .vote-fill.no { background: var(--md-no-bg); border-right: 4px solid var(--md-no); }
+
+    .vote-info {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+
+    .vote-tag {
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    .tag-yes { background: var(--md-yes); color: #00390A; }
+    .tag-no { background: var(--md-no); color: #690005; }
+
+    .vote-stats {
+      position: relative;
+      z-index: 2;
+      text-align: right;
+      font-weight: 800;
+      font-size: 1.2rem;
+    }
+
+    .vote-sub {
+      font-size: 0.78rem;
+      color: var(--md-text-muted);
+      font-weight: 600;
+      display: block;
+    }
+
+    .feed-box {
+      background: var(--md-surface-high);
+      border-radius: var(--radius-lg);
+      padding: 12px 16px;
+      font-size: 0.84rem;
+      color: var(--md-text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .winner-banner {
+      display: none;
+      padding: 14px 18px;
+      border-radius: var(--radius-lg);
+      background: var(--md-primary-container);
+      color: var(--md-primary);
+      font-weight: 800;
+      text-align: center;
+      font-size: 1rem;
+    }
+
+    .token-meta {
+      font-size: 0.78rem;
+      color: var(--md-text-muted);
+      display: flex;
+      justify-content: space-between;
+      padding: 0 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+    <!-- Barra de Estado y Selector Material You -->
+    <div class="top-bar">
+      <div class="status-badge">
+        <div id="statusDot" class="status-dot"></div>
+        <span id="statusText">Sin autenticar</span>
+      </div>
+      <div class="theme-dots" title="Cambiar color Material You">
+        <button class="theme-btn active" style="background:#C3C0FF" onclick="setTheme('default', this)"></button>
+        <button class="theme-btn" style="background:#85D6A8" onclick="setTheme('emerald', this)"></button>
+        <button class="theme-btn" style="background:#FFB4A4" onclick="setTheme('coral', this)"></button>
+        <button class="theme-btn" style="background:#96CCF8" onclick="setTheme('ocean', this)"></button>
+      </div>
+    </div>
+
+    <!-- Panel de Autenticación con Token OAuth -->
+    <div class="card">
+      <div class="card-header" onclick="toggleAuthPanel()">
+        <div class="card-title">
+          <span class="material-symbols-rounded">key</span>
+          <span>Autenticación OAuth de Twitch</span>
+        </div>
+        <span class="material-symbols-rounded" id="collapseIcon">expand_less</span>
+      </div>
+
+      <div id="authBody" class="auth-body">
+        <div class="input-row">
+          <div class="password-wrapper">
+            <input type="password" id="tokenInput" class="md-input" placeholder="Token OAuth (ej. oauth:a1b2c3...)" />
+            <button class="icon-btn" onclick="toggleTokenVisibility()" title="Mostrar/Ocultar Token">
+              <span class="material-symbols-rounded" id="eyeIcon">visibility</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="input-row">
+          <input type="text" id="channelInput" class="md-input" placeholder="Canal destino (opcional si eres tú)" />
+          <button class="btn btn-primary" onclick="connectWithToken()">
+            <span class="material-symbols-rounded">verified_user</span>
+            Validar y Conectar
+          </button>
+        </div>
+
+        <!-- Generador OAuth Implícito opcional con Client ID -->
+        <div class="input-row">
+          <input type="text" id="clientIdInput" class="md-input" placeholder="Client ID (opcional para login 1-clic)" />
+          <button class="btn btn-tonal" onclick="startOAuthRedirect()" title="Autorizar con Twitch">
+            <span class="material-symbols-rounded">login</span>
+            Generar Token
+          </button>
+        </div>
+
+        <div class="switch-row">
+          <span>Anunciar inicio y ganador en el chat (`chat:edit`)</span>
+          <label class="md-switch">
+            <input type="checkbox" id="announceToggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="token-meta">
+          <span id="tokenScopes">Permisos detectados: ninguno</span>
+          <span style="cursor:pointer; text-decoration:underline" onclick="clearSavedCreds()">Borrar token guardado</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuración de Pregunta y Tiempo -->
+    <div class="card">
+      <div class="input-row">
+        <input type="text" id="questionInput" class="md-input" placeholder="Pregunta de la encuesta..." value="¿Entramos en la mazmorra final?" oninput="updateQuestion()" />
+      </div>
+
+      <div class="time-config">
+        <span style="font-size:0.84rem; font-weight:700; color:var(--md-text-muted);">Duración (seg):</span>
+        <div class="chip-group">
+          <button class="chip" onclick="selectPreset(30, this)">30s</button>
+          <button class="chip selected" onclick="selectPreset(50, this)">50s</button>
+          <button class="chip" onclick="selectPreset(90, this)">90s</button>
+        </div>
+        <input type="number" id="durationInput" class="md-input custom-seconds" value="50" min="5" max="600" onchange="syncCustomTime()" />
+      </div>
+    </div>
+
+    <!-- Tarjeta Principal de Votación -->
+    <div class="card">
+      <div class="timer-header">
+        <span style="font-size:0.82rem; font-weight:700; color:var(--md-text-muted);">ESCRIBE "SÍ" O "NO" EN EL CHAT</span>
+        <div id="timerPill" class="timer-pill">
+          <span class="material-symbols-rounded">timer</span>
+          <span id="timeDisplay">00:50</span>
+        </div>
+      </div>
+
+      <div id="questionTitle" class="question-display">¿Entramos en la mazmorra final?</div>
+
+      <div id="winnerBanner" class="winner-banner"></div>
+
+      <!-- Opción SÍ -->
+      <div class="vote-track">
+        <div id="yesFill" class="vote-fill yes"></div>
+        <div class="vote-info">
+          <span class="vote-tag tag-yes">SÍ</span>
+          <span>Votar Sí</span>
+        </div>
+        <div class="vote-stats">
+          <span id="yesPercent">0%</span>
+          <span id="yesCount" class="vote-sub">0 votos</span>
+        </div>
+      </div>
+
+      <!-- Opción NO -->
+      <div class="vote-track">
+        <div id="noFill" class="vote-fill no"></div>
+        <div class="vote-info">
+          <span class="vote-tag tag-no">NO</span>
+          <span>Votar No</span>
+        </div>
+        <div class="vote-stats">
+          <span id="noPercent">0%</span>
+          <span id="noCount" class="vote-sub">0 votos</span>
+        </div>
+      </div>
+
+      <div class="feed-box">
+        <span id="lastVoter">Conecta tu token para recibir votos...</span>
+        <span id="totalVotesBadge" style="font-weight:800; color:var(--md-primary)">Total: 0</span>
+      </div>
+
+      <!-- Controles -->
+      <div class="input-row">
+        <button id="startBtn" class="btn btn-primary" style="flex:2" onclick="togglePoll()">
+          <span class="material-symbols-rounded" id="startIcon">play_arrow</span>
+          <span id="startText">Iniciar Votación (50s)</span>
+        </button>
+        <button class="btn btn-tonal" onclick="resetPoll()" title="Reiniciar contador">
+          <span class="material-symbols-rounded">restart_alt</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let ws = null;
+    let pollActive = false;
+    let timerInterval = null;
+    let remainingSeconds = 50;
+    let votes = { yes: 0, no: 0 };
+    let votedUserIds = new Set();
+    let activeChannel = '';
+    let authUsername = '';
+
+    // Al cargar: recuperar token de URL (#access_token) o de localStorage
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.location.hash.includes('access_token=')) {
+        const params = new URLSearchParams(window.location.hash.substring(1));
+        const urlToken = params.get('access_token');
+        if (urlToken) {
+          localStorage.setItem('twitch_oauth_token', urlToken);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+
+      const savedToken = localStorage.getItem('twitch_oauth_token') || '';
+      const savedChannel = localStorage.getItem('twitch_channel') || '';
+      const savedClientId = localStorage.getItem('twitch_client_id') || '';
+
+      if (savedToken) document.getElementById('tokenInput').value = savedToken;
+      if (savedChannel) document.getElementById('channelInput').value = savedChannel;
+      if (savedClientId) document.getElementById('clientIdInput').value = savedClientId;
+
+      if (savedToken) {
+        connectWithToken();
+      }
+    });
+
+    function setTheme(theme, btn) {
+      if (theme === 'default') {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+      document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function toggleAuthPanel() {
+      const body = document.getElementById('authBody');
+      const icon = document.getElementById('collapseIcon');
+      body.classList.toggle('collapsed');
+      icon.textContent = body.classList.contains('collapsed') ? 'expand_more' : 'expand_less';
+    }
+
+    function toggleTokenVisibility() {
+      const input = document.getElementById('tokenInput');
+      const icon = document.getElementById('eyeIcon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = 'visibility_off';
+      } else {
+        input.type = 'password';
+        icon.textContent = 'visibility';
+      }
+    }
+
+    function startOAuthRedirect() {
+      const clientId = document.getElementById('clientIdInput').value.trim();
+      if (!clientId) {
+        alert('Introduce primero el Client ID de tu aplicación de Twitch Developer.');
+        return;
+      }
+      localStorage.setItem('twitch_client_id', clientId);
+      const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
+      const scopes = encodeURIComponent('chat:read chat:edit');
+      window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=${scopes}`;
+    }
+
+    function clearSavedCreds() {
+      localStorage.removeItem('twitch_oauth_token');
+      localStorage.removeItem('twitch_channel');
+      document.getElementById('tokenInput').value = '';
+      document.getElementById('tokenScopes').textContent = 'Token eliminado del navegador';
+      if (ws) ws.close();
+    }
+
+    async function connectWithToken() {
+      let rawToken = document.getElementById('tokenInput').value.trim();
+      if (!rawToken) {
+        alert('Introduce tu Token OAuth de Twitch.');
+        return;
+      }
+
+      // Limpiar prefijo "oauth:" o "Bearer " para validarlo contra la API de Twitch
+      const cleanToken = rawToken.replace(/^oauth:/i, '').replace(/^Bearer\s+/i, '').trim();
+
+      document.getElementById('statusText').textContent = 'Validando token...';
+
+      try {
+        const res = await fetch('https://id.twitch.tv/oauth2/validate', {
+          headers: { 'Authorization': `OAuth ${cleanToken}` }
+        });
+
+        if (!res.ok) {
+          throw new Error('El token OAuth es inválido o ha expirado.');
+        }
+
+        const data = await res.json();
+        authUsername = data.login.toLowerCase();
+        const scopes = Array.isArray(data.scopes) ? data.scopes.join(', ') : 'ninguno';
+        document.getElementById('tokenScopes').textContent = `Usuario: @${authUsername} | Scopes: ${scopes}`;
+
+        // Si el usuario no escribió un canal, usamos su propio canal autenticado
+        let channelField = document.getElementById('channelInput').value.trim().toLowerCase().replace('#', '');
+        activeChannel = channelField || authUsername;
+        document.getElementById('channelInput').value = activeChannel;
+
+        // Guardar en localStorage
+        localStorage.setItem('twitch_oauth_token', cleanToken);
+        localStorage.setItem('twitch_channel', activeChannel);
+
+        openAuthenticatedWebSocket(cleanToken, authUsername, activeChannel);
+      } catch (err) {
+        document.getElementById('statusDot').classList.remove('connected');
+        document.getElementById('statusText').textContent = 'Token inválido';
+        alert(err.message);
+      }
+    }
+
+    function openAuthenticatedWebSocket(cleanToken, nick, channel) {
+      if (ws) ws.close();
+
+      ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+
+      ws.onopen = () => {
+        // Pedimos tags para leer el user-id real de cada espectador
+        ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+        ws.send(`PASS oauth:${cleanToken}`);
+        ws.send(`NICK ${nick}`);
+        ws.send(`JOIN #${channel}`);
+
+        document.getElementById('statusDot').classList.add('connected');
+        document.getElementById('statusText').textContent = `@${nick} en #${channel}`;
+        document.getElementById('lastVoter').textContent = `Conectado con OAuth a #${channel}`;
+
+        // Plegar panel de autenticación tras conectar con éxito
+        document.getElementById('authBody').classList.add('collapsed');
+        document.getElementById('collapseIcon').textContent = 'expand_more';
+      };
+
+      ws.onmessage = (event) => {
+        const lines = event.data.split('\r\n');
+        lines.forEach(line => {
+          if (line.startsWith('PING')) {
+            ws.send('PONG :tmi.twitch.tv');
+            return;
+          }
+          if (line.includes('NOTICE * :Login authentication failed')) {
+            alert('Error de autenticación IRC: verifica que el token tenga el permiso chat:read.');
+            ws.close();
+            return;
+          }
+          if (pollActive && line.includes('PRIVMSG')) {
+            // Extraer user-id único de los tags IRC si está presente
+            const idMatch = line.match(/user-id=([^;]+)/);
+            const msgMatch = line.match(/:([^!]+)!.*PRIVMSG #\S+ :(.+)/);
+            if (msgMatch) {
+              const displayUser = msgMatch[1].toLowerCase();
+              const uniqueVoterKey = idMatch ? idMatch[1] : displayUser;
+              const messageText = msgMatch[2].trim();
+              processVote(uniqueVoterKey, displayUser, messageText);
+            }
+          }
+        });
+      };
+
+      ws.onclose = () => {
+        document.getElementById('statusDot').classList.remove('connected');
+        document.getElementById('statusText').textContent = 'Desconectado';
+      };
+    }
+
+    function sendChatAnnouncement(text) {
+      const announceEnabled = document.getElementById('announceToggle').checked;
+      if (announceEnabled && ws && ws.readyState === WebSocket.OPEN && activeChannel) {
+        ws.send(`PRIVMSG #${activeChannel} :${text}`);
+      }
+    }
+
+    function processVote(voterId, displayUser, msg) {
+      if (votedUserIds.has(voterId)) return;
+
+      const clean = msg.replace(/^!/, '').trim();
+      if (/^(s[ií]|yes|1)$/i.test(clean)) {
+        votes.yes++;
+        votedUserIds.add(voterId);
+        document.getElementById('lastVoter').textContent = `${displayUser} votó SÍ`;
+        updateUI();
+      } else if (/^(no|nope|2)$/i.test(clean)) {
+        votes.no++;
+        votedUserIds.add(voterId);
+        document.getElementById('lastVoter').textContent = `${displayUser} votó NO`;
+        updateUI();
+      }
+    }
+
+    function updateQuestion() {
+      const q = document.getElementById('questionInput').value.trim();
+      document.getElementById('questionTitle').textContent = q || 'Encuesta en directo';
+    }
+
+    function selectPreset(seconds, chipEl) {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      chipEl.classList.add('selected');
+      document.getElementById('durationInput').value = seconds;
+      if (!pollActive) {
+        remainingSeconds = seconds;
+        renderTime();
+        document.getElementById('startText').textContent = `Iniciar Votación (${seconds}s)`;
+      }
+    }
+
+    function syncCustomTime() {
+      const val = Math.max(5, parseInt(document.getElementById('durationInput').value) || 50);
+      document.getElementById('durationInput').value = val;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      if (!pollActive) {
+        remainingSeconds = val;
+        renderTime();
+        document.getElementById('startText').textContent = `Iniciar Votación (${val}s)`;
+      }
+    }
+
+    function renderTime() {
+      const mins = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
+      const secs = String(remainingSeconds % 60).padStart(2, '0');
+      document.getElementById('timeDisplay').textContent = `${mins}:${secs}`;
+      const pill = document.getElementById('timerPill');
+      if (pollActive && remainingSeconds <= 10 && remainingSeconds > 0) {
+        pill.classList.add('urgent');
+      } else {
+        pill.classList.remove('urgent');
+      }
+    }
+
+    function updateUI() {
+      const total = votes.yes + votes.no;
+      const yesPct = total === 0 ? 0 : Math.round((votes.yes / total) * 100);
+      const noPct = total === 0 ? 0 : 100 - yesPct;
+
+      document.getElementById('yesFill').style.width = `${yesPct}%`;
+      document.getElementById('noFill').style.width = `${noPct}%`;
+      document.getElementById('yesPercent').textContent = `${yesPct}%`;
+      document.getElementById('noPercent').textContent = `${noPct}%`;
+      document.getElementById('yesCount').textContent = `${votes.yes} votos`;
+      document.getElementById('noCount').textContent = `${votes.no} votos`;
+      document.getElementById('totalVotesBadge').textContent = `Total: ${total}`;
+    }
+
+    function togglePoll() {
+      if (pollActive) {
+        finishPoll();
+      } else {
+        startPoll();
+      }
+    }
+
+    function startPoll() {
+      votes = { yes: 0, no: 0 };
+      votedUserIds.clear();
+      updateUI();
+
+      remainingSeconds = parseInt(document.getElementById('durationInput').value) || 50;
+      pollActive = true;
+      document.getElementById('winnerBanner').style.display = 'none';
+      document.getElementById('startIcon').textContent = 'stop';
+      document.getElementById('startText').textContent = 'Detener Votación';
+      document.getElementById('lastVoter').textContent = '¡Votación abierta! Escribe SÍ o NO';
+      renderTime();
+
+      const q = document.getElementById('questionTitle').textContent;
+      sendChatAnnouncement(`📊 ¡VOTACIÓN ABIERTA (${remainingSeconds}s)! "${q}" — Escribe SÍ o NO en el chat para votar.`);
+
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        remainingSeconds--;
+        renderTime();
+        if (remainingSeconds <= 0) {
+          finishPoll();
+        }
+      }, 1000);
+    }
+
+    function finishPoll() {
+      pollActive = false;
+      clearInterval(timerInterval);
+      document.getElementById('timerPill').classList.remove('urgent');
+      const configuredSecs = parseInt(document.getElementById('durationInput').value) || 50;
+      document.getElementById('startIcon').textContent = 'play_arrow';
+      document.getElementById('startText').textContent = `Nueva Votación (${configuredSecs}s)`;
+
+      const banner = document.getElementById('winnerBanner');
+      banner.style.display = 'block';
+      const yesPct = document.getElementById('yesPercent').textContent;
+      const noPct = document.getElementById('noPercent').textContent;
+
+      if (votes.yes > votes.no) {
+        const msg = `🏆 ¡Ganó el SÍ con el ${yesPct} (${votes.yes} votos)!`;
+        banner.textContent = msg;
+        sendChatAnnouncement(msg);
+      } else if (votes.no > votes.yes) {
+        const msg = `🏆 ¡Ganó el NO con el ${noPct} (${votes.no} votos)!`;
+        banner.textContent = msg;
+        sendChatAnnouncement(msg);
+      } else {
+        const msg = `⚖️ ¡Empate en la votación (${votes.yes} a ${votes.no})!`;
+        banner.textContent = msg;
+        sendChatAnnouncement(msg);
+      }
+    }
+
+    function resetPoll() {
+      clearInterval(timerInterval);
+      pollActive = false;
+      votes = { yes: 0, no: 0 };
+      votedUserIds.clear();
+      updateUI();
+      remainingSeconds = parseInt(document.getElementById('durationInput').value) || 50;
+      renderTime();
+      document.getElementById('winnerBanner').style.display = 'none';
+      document.getElementById('startIcon').textContent = 'play_arrow';
+      document.getElementById('startText').textContent = `Iniciar Votación (${remainingSeconds}s)`;
+      document.getElementById('lastVoter').textContent = 'Contador reiniciado.';
+    }
+  </script>
+</body>
+</html>
